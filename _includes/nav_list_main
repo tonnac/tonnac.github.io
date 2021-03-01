@@ -215,6 +215,20 @@
                 {% endfor %}
             </ul>
 {% endcomment %}
+
+        <span class="nav__sub-title">Book</span>
+            <ul>
+                {% for category in site.categories %}
+                    {% if category[0] == "Book" %}
+                        {% for tag in site.tags %}
+                            {% if tag[0] == "Modern Effective C++" %}
+                                <li><a href="/tags/modern_effective_cpp" class="">{{tag[0]}}({{tag[1].size}})</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+
         <span class="nav__sub-title">etc</span>
             <ul>
                 {% for category in site.categories %}
