@@ -1,0 +1,942 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.22.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>[UE4] UE4를 이용한 WoW모작 - 블로그</title>
+<meta name="description" content="1. 게임의 개요              게임: WoW 모작 인원: 개인 기간: 3주 엔진버전: 4.21  C++ 70%, 블루프린트 30%로 작업  2. 개발내용  캐릭터 애니매이션 블루프린트 구현 Behaviour Tree를 통해 AI 행동구현 캐릭터 레벨, 1차 스탯(힘, 민첩, 지능, 체력) 2차 스탯(가속, 치명타), 버프 구현 주문 시스템 구현  [그림 2-1] 주문은 데이터에셋을 통해서 관리 Post-Processing을 통해 NPC 적대관계별 아웃라인 표시    [그림 2-2,3,4] NPC아웃라인  UI   [그림 2-5] 구현된 UI 캐릭터 현재 상태 시전바 구현 주문책, 하단 행동단축바 주문책에서 드래그 앤 드롭으로 행동단축바로 등록하는 방식">
+
+
+  <meta name="author" content="tonnac">
+  
+  <meta property="article:author" content="tonnac">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="블로그">
+<meta property="og:title" content="[UE4] UE4를 이용한 WoW모작">
+<meta property="og:url" content="https://tonnac.github.io/project/ue4/UE4.Wow/">
+
+
+  <meta property="og:description" content="1. 게임의 개요              게임: WoW 모작 인원: 개인 기간: 3주 엔진버전: 4.21  C++ 70%, 블루프린트 30%로 작업  2. 개발내용  캐릭터 애니매이션 블루프린트 구현 Behaviour Tree를 통해 AI 행동구현 캐릭터 레벨, 1차 스탯(힘, 민첩, 지능, 체력) 2차 스탯(가속, 치명타), 버프 구현 주문 시스템 구현  [그림 2-1] 주문은 데이터에셋을 통해서 관리 Post-Processing을 통해 NPC 적대관계별 아웃라인 표시    [그림 2-2,3,4] NPC아웃라인  UI   [그림 2-5] 구현된 UI 캐릭터 현재 상태 시전바 구현 주문책, 하단 행동단축바 주문책에서 드래그 앤 드롭으로 행동단축바로 등록하는 방식">
+
+
+
+  <meta property="og:image" content="https://tonnac.github.io/assets/images/avatar.jpg">
+
+
+
+
+
+  <meta property="article:published_time" content="2021-02-14T00:00:00+00:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://tonnac.github.io/project/ue4/UE4.Wow/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "tonnac",
+      "url": "https://tonnac.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="블로그 Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+<link rel="shortcut icon" type="image/png" href="assets/images/favicon.ico">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          <!-- 블로그 -->
+          홈
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/categories/">Category</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/images/avatar.jpg" alt="tonnac" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">tonnac</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>오늘</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">South Korea</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="mailto:tonnac35@gmail.com" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span></a></li>
+          
+        
+          
+            <li><a href="https://tonnac.github.io/" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-link" aria-hidden="true"></i><span class="label">Website</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/tonnac/" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  
+    
+
+<nav class="nav__list">
+  <input id="ac-toc" name="accordion-toc" type="checkbox" />
+  <label for="ac-toc">Toggle menu</label>
+  <ul class="nav__items" id="category_tag_menu">
+  
+      <li>
+        <span class="nav__sub-title">C++</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+
+
+
+
+        <span class="nav__sub-title">UE4</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                        <li><a href="/categories/UE4" class="">언리얼엔진4 (2)</a></li>
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        
+
+
+        <span class="nav__sub-title">Book</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                        
+                            
+                        
+                            
+                        
+                            
+                                <li><a href="/tags/modern_effective_cpp" class="">Modern Effective C++(2)</a></li>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    
+                
+                    
+                
+            </ul>
+
+        <span class="nav__sub-title">etc</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+      </li>
+  </ul>
+</nav>
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="[UE4] UE4를 이용한 WoW모작">
+    <meta itemprop="description" content="1. 게임의 개요      게임: WoW 모작인원: 개인기간: 3주엔진버전: 4.21C++ 70%, 블루프린트 30%로 작업2. 개발내용캐릭터 애니매이션 블루프린트 구현Behaviour Tree를 통해 AI 행동구현캐릭터 레벨, 1차 스탯(힘, 민첩, 지능, 체력) 2차 스탯(가속, 치명타), 버프 구현주문 시스템 구현[그림 2-1] 주문은 데이터에셋을 통해서 관리Post-Processing을 통해 NPC 적대관계별 아웃라인 표시[그림 2-2,3,4] NPC아웃라인UI[그림 2-5] 구현된 UI캐릭터 현재 상태시전바 구현주문책, 하단 행동단축바 주문책에서 드래그 앤 드롭으로 행동단축바로 등록하는 방식">
+    <meta itemprop="datePublished" content="February 14, 2021">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">[UE4] UE4를 이용한 WoW모작
+</h1>
+          
+            <p class="page__date"><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated: <time datetime="2021-02-14T00:00:00+00:00">February 14, 2021</time></p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              
+                <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+                <ul class="toc__menu"><li><a href="#1-게임의-개요">1. 게임의 개요</a></li><li><a href="#2-개발내용">2. 개발내용</a><ul><li><a href="#ui">UI</a></li></ul></li></ul>
+
+              
+            </nav>
+            <!-- devinlife comment : right-sidebar ads -->
+            <nav class="toc-custom">
+              
+            </nav>
+          </aside>
+        
+        <h1 id="1-게임의-개요">1. 게임의 개요</h1>
+
+<!-- Courtesy of embedresponsively.com //-->
+
+<div class="responsive-video-container">
+    <iframe src="https://www.youtube-nocookie.com/embed/Ln0s9rjYkuo" frameborder="0" webkitallowfullscreen="" mozallowfullscreen="" allowfullscreen=""></iframe>
+  </div>
+
+<p>게임: WoW 모작<br />
+인원: 개인<br />
+기간: 3주<br /><br />
+엔진버전: 4.21</p>
+
+<p>C++ 70%, 블루프린트 30%로 작업</p>
+
+<h1 id="2-개발내용">2. 개발내용</h1>
+
+<p>캐릭터 애니매이션 블루프린트 구현<br />
+Behaviour Tree를 통해 AI 행동구현<br />
+캐릭터 레벨, 1차 스탯(힘, 민첩, 지능, 체력) 2차 스탯(가속, 치명타), 버프 구현<br />
+주문 시스템 구현<br />
+<img src="https://tonnac.github.io/assets/images/UE4_04.png" alt="" /><br />
+[그림 2-1] 주문은 데이터에셋을 통해서 관리<br />
+Post-Processing을 통해 NPC 적대관계별 아웃라인 표시<br />
+<img src="https://tonnac.github.io/assets/images/UE4_00.png" alt="" />
+<img src="https://tonnac.github.io/assets/images/UE4_01.png" alt="" />
+<img src="https://tonnac.github.io/assets/images/UE4_02.png" alt="" /><br />
+[그림 2-2,3,4] NPC아웃라인</p>
+
+<h2 id="ui">UI</h2>
+
+<p><img src="https://tonnac.github.io/assets/images/UE4_03.png" alt="" />
+[그림 2-5] 구현된 UI<br />
+캐릭터 현재 상태<br />
+시전바 구현<br />
+주문책, 하단 행동단축바 주문책에서 드래그 앤 드롭으로 행동단축바로 등록하는 방식</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#wow" class="page__taxonomy-item" rel="tag">Wow</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#project" class="page__taxonomy-item" rel="tag">Project</a><span class="sep"> </span>
+    
+      
+      
+      <a href="/categories/#ue4" class="page__taxonomy-item" rel="tag">UE4</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-02-14T00:00:00+00:00">February 14, 2021</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%5BUE4%5D+UE4%EB%A5%BC+%EC%9D%B4%EC%9A%A9%ED%95%9C+WoW%EB%AA%A8%EC%9E%91%20https%3A%2F%2Ftonnac.github.io%2Fproject%2Fue4%2FUE4.Wow%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Ftonnac.github.io%2Fproject%2Fue4%2FUE4.Wow%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Ftonnac.github.io%2Fproject%2Fue4%2FUE4.Wow%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/project/directx11/DxMomo/" class="pagination--pager" title="[DirectX 11] Dx11를 이용한 모모도라 모작
+">Previous</a>
+    
+    
+      <a href="/book/01/" class="pagination--pager" title="[Modern Effective C++] 1. 템플릿 타입 추론 규칙을 숙지
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You may also enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.05.16</p>
+      
+      
+        <a href="/project/ue4/ci/UE4_Jenkins/" rel="permalink">[UE4] Jenkins를 이용한 CI환경 구축
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Project</a><span class="sep"> </span><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">UE4</a><span class="sep"> </span><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">CI</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Jenkins</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.03.01</p>
+      
+      
+        <a href="/book/02/" rel="permalink">[Modern Effective C++] 2. auto의 타입 추론 규칙을 숙지
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Book</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern Effective C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Type Deduction</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.03.01</p>
+      
+      
+        <a href="/book/01/" rel="permalink">[Modern Effective C++] 1. 템플릿 타입 추론 규칙을 숙지
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Book</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern Effective C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Type Deduction</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.02.13</p>
+      
+      
+        <a href="/project/directx11/DxMomo/" rel="permalink">[DirectX 11] Dx11를 이용한 모모도라 모작
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Project</a><span class="sep"> </span><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">DirectX11</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Momodora</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+      </div>
+    </div>
+  
+  
+</div>
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2021 tonnac. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+  </body>
+</html>
