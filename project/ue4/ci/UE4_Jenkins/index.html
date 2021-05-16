@@ -1,0 +1,1023 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.22.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>[UE4] Jenkins를 이용한 CI환경 구축 - 블로그</title>
+<meta name="description" content="인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함  1. Jenkins 설치  Jenkins 다운로드 페이지 설치에 딱히 어려움은 없음. 추가적으로 Jenkins는 JRE 설치가 필요하다. Java 다운로드 페이지  2. 환경설정   초기화면 Jenkins는 현재 사용중인 브라우저 언어에 따라서 설정이되는데, 한글같은 경우는 번역체가 좀 있어서 그냥 영어를 쓰는게 편한듯  1) 노드추가  Manage Jenkins -&gt; Manage Nodes and Clouds -&gt; New Node로 추가해준다. 노드에 환경 변수를 추가해준다. ARCHIVE_ROOT는 빌드가 진행한 후 결과물을 압축해서 올릴 수 있는데 필요없다면 패스. ENGINE_ROOT에 쓸 엔진을 추가해준다.   3. 프로젝트 추가  NewItem -&gt; Freestyle project로 새로운 프로젝트를 생성한다.  1) General    1 This Project is parameterized (선택)  파라미터를 통해 다양하게 빌드를 진행할 수 있다. 위와같이 솔루션구성을 다르게 한다던가 플랫폼을 변경해서 빌드를 하는 등으로 사용할 수 있다.  2 Restrict where this project can be run  앞서 만들었던 노드의 이름을 넣어준다.  3 User custom workspace  프로젝트 폴더를 넣어준다.  2) Source Code Management  자신이 사용하고 있는 소스컨트롤을 선택하고 Repository를 설정  3) Build Triggers  빌드가 될 시점을 선택한다. 현재 테스트해본것은 Poll SCM으로 H/2 * * * * 값을 넣어줘서 2분마다 Repository를 확인해서 변경 사항이 있으면 빌드를 진행하는 방식이다.  4) Build  빌드 명령을 설정해주는 부분.  Add build step에서 Execute Windows batch command를 선택해서 추가해준다.  1 temp, Binaries, Intermediate 폴더 삭제  rd /s /q temp rmdir /s /q &quot;%WORKSPACE%\Binaries&quot; rmdir /s /q &quot;%WORKSPACE%\Intermediate&quot;   빌드한 파일들은 temp폴더에 저장했다가 빌드가 완료되면 폴더이름을 바꿔주어서 temp 폴더를 넣어준다.  2 UnrealBuildTool을 이용해서 uproject파일에서 sln파일 생성  &quot;%ENGINE_ROOT%\Engine\Binaries\DotNET\UnrealBuildTool.exe&quot; -projectfiles -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -game -rocket -progress   3 Msbuild로 프로젝트 컴파일  &quot;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe&quot; &quot;%WORKSPACE%\%PROJECT_NAME%.sln&quot; /t:build /p:Configuration=&quot;%BUILD_CONFIGURATION%&quot;;Platform=Win64;verbosity=diagnostic   MSBuild 파일 경로는 사용하는 컴퓨터 환경에서 찾아서 넣어주면 된다.  4 temp폴더 없으면 생성  if not exist &quot;%WORKSPACE%/temp/x64&quot; mkdir &quot;%WORKSPACE%/temp/x64&quot;   5 패키징 진행  &quot;%ENGINE_ROOT%\Engine\Build\BatchFiles\RunUAT.bat&quot; BuildCookRun -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -noP4 -platform=Win64 -clientconfig=%BUILD_CONFIGURATION% -cook -allmaps -build -stage %USE_PAK% -archive -archivedirectory=&quot;%WORKSPACE%/temp/x64&quot;   6 Temp폴더 이름 변경  ren %WORKSPACE%\temp\x64\WindowsNoEditor %PROJECT_NAME%_%BUILD_CONFIGURATION%_x64   7 완료한 빌드폴더 압축하기(선택)  &quot;%ARCHIVE_ROOT%/7z.exe&quot; a -t7z %WORKSPACE%/temp/x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64.7z &quot;%WORKSPACE%\temp\x64\%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64&quot;   5) Post-build Actions  빌드가 끝나고 나서 할것들을 정할 수 있다. 슬랙에 알람, 이메일 전송, Jenkins에 압축한 파일 올리기 등등이 가능.  TODO  현재 테스트 환경은 로컬에서 진행한것이라 추후에 서버컴퓨터에서 작동을 시켜보기 안드로이드로 빌드를하면 중간에 에러가 나서 이 부분을 어떻게 해야할지 생각해보기  참고  https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/ https://patricevignola.com/post/automation-jenkins-unreal https://github.com/skymapgames/jenkins-ue4">
+
+
+  <meta name="author" content="tonnac">
+  
+  <meta property="article:author" content="tonnac">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="블로그">
+<meta property="og:title" content="[UE4] Jenkins를 이용한 CI환경 구축">
+<meta property="og:url" content="https://tonnac.github.io/project/ue4/ci/UE4_Jenkins/">
+
+
+  <meta property="og:description" content="인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함  1. Jenkins 설치  Jenkins 다운로드 페이지 설치에 딱히 어려움은 없음. 추가적으로 Jenkins는 JRE 설치가 필요하다. Java 다운로드 페이지  2. 환경설정   초기화면 Jenkins는 현재 사용중인 브라우저 언어에 따라서 설정이되는데, 한글같은 경우는 번역체가 좀 있어서 그냥 영어를 쓰는게 편한듯  1) 노드추가  Manage Jenkins -&gt; Manage Nodes and Clouds -&gt; New Node로 추가해준다. 노드에 환경 변수를 추가해준다. ARCHIVE_ROOT는 빌드가 진행한 후 결과물을 압축해서 올릴 수 있는데 필요없다면 패스. ENGINE_ROOT에 쓸 엔진을 추가해준다.   3. 프로젝트 추가  NewItem -&gt; Freestyle project로 새로운 프로젝트를 생성한다.  1) General    1 This Project is parameterized (선택)  파라미터를 통해 다양하게 빌드를 진행할 수 있다. 위와같이 솔루션구성을 다르게 한다던가 플랫폼을 변경해서 빌드를 하는 등으로 사용할 수 있다.  2 Restrict where this project can be run  앞서 만들었던 노드의 이름을 넣어준다.  3 User custom workspace  프로젝트 폴더를 넣어준다.  2) Source Code Management  자신이 사용하고 있는 소스컨트롤을 선택하고 Repository를 설정  3) Build Triggers  빌드가 될 시점을 선택한다. 현재 테스트해본것은 Poll SCM으로 H/2 * * * * 값을 넣어줘서 2분마다 Repository를 확인해서 변경 사항이 있으면 빌드를 진행하는 방식이다.  4) Build  빌드 명령을 설정해주는 부분.  Add build step에서 Execute Windows batch command를 선택해서 추가해준다.  1 temp, Binaries, Intermediate 폴더 삭제  rd /s /q temp rmdir /s /q &quot;%WORKSPACE%\Binaries&quot; rmdir /s /q &quot;%WORKSPACE%\Intermediate&quot;   빌드한 파일들은 temp폴더에 저장했다가 빌드가 완료되면 폴더이름을 바꿔주어서 temp 폴더를 넣어준다.  2 UnrealBuildTool을 이용해서 uproject파일에서 sln파일 생성  &quot;%ENGINE_ROOT%\Engine\Binaries\DotNET\UnrealBuildTool.exe&quot; -projectfiles -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -game -rocket -progress   3 Msbuild로 프로젝트 컴파일  &quot;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe&quot; &quot;%WORKSPACE%\%PROJECT_NAME%.sln&quot; /t:build /p:Configuration=&quot;%BUILD_CONFIGURATION%&quot;;Platform=Win64;verbosity=diagnostic   MSBuild 파일 경로는 사용하는 컴퓨터 환경에서 찾아서 넣어주면 된다.  4 temp폴더 없으면 생성  if not exist &quot;%WORKSPACE%/temp/x64&quot; mkdir &quot;%WORKSPACE%/temp/x64&quot;   5 패키징 진행  &quot;%ENGINE_ROOT%\Engine\Build\BatchFiles\RunUAT.bat&quot; BuildCookRun -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -noP4 -platform=Win64 -clientconfig=%BUILD_CONFIGURATION% -cook -allmaps -build -stage %USE_PAK% -archive -archivedirectory=&quot;%WORKSPACE%/temp/x64&quot;   6 Temp폴더 이름 변경  ren %WORKSPACE%\temp\x64\WindowsNoEditor %PROJECT_NAME%_%BUILD_CONFIGURATION%_x64   7 완료한 빌드폴더 압축하기(선택)  &quot;%ARCHIVE_ROOT%/7z.exe&quot; a -t7z %WORKSPACE%/temp/x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64.7z &quot;%WORKSPACE%\temp\x64\%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64&quot;   5) Post-build Actions  빌드가 끝나고 나서 할것들을 정할 수 있다. 슬랙에 알람, 이메일 전송, Jenkins에 압축한 파일 올리기 등등이 가능.  TODO  현재 테스트 환경은 로컬에서 진행한것이라 추후에 서버컴퓨터에서 작동을 시켜보기 안드로이드로 빌드를하면 중간에 에러가 나서 이 부분을 어떻게 해야할지 생각해보기  참고  https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/ https://patricevignola.com/post/automation-jenkins-unreal https://github.com/skymapgames/jenkins-ue4">
+
+
+
+  <meta property="og:image" content="https://tonnac.github.io/assets/images/avatar.jpg">
+
+
+
+
+
+  <meta property="article:published_time" content="2021-05-16T00:00:00+00:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://tonnac.github.io/project/ue4/ci/UE4_Jenkins/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "tonnac",
+      "url": "https://tonnac.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="블로그 Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+<link rel="shortcut icon" type="image/png" href="assets/images/favicon.ico">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          <!-- 블로그 -->
+          홈
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/categories/">Category</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/images/avatar.jpg" alt="tonnac" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">tonnac</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>오늘</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name">South Korea</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="mailto:tonnac35@gmail.com" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span></a></li>
+          
+        
+          
+            <li><a href="https://tonnac.github.io/" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-link" aria-hidden="true"></i><span class="label">Website</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/tonnac/" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  
+    
+
+<nav class="nav__list">
+  <input id="ac-toc" name="accordion-toc" type="checkbox" />
+  <label for="ac-toc">Toggle menu</label>
+  <ul class="nav__items" id="category_tag_menu">
+  
+      <li>
+        <span class="nav__sub-title">C++</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+
+
+
+
+        <span class="nav__sub-title">UE4</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                        <li><a href="/categories/UE4" class="">언리얼엔진4 (2)</a></li>
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        
+
+
+        <span class="nav__sub-title">Book</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                        
+                            
+                        
+                            
+                        
+                            
+                                <li><a href="/tags/modern_effective_cpp" class="">Modern Effective C++(2)</a></li>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    
+                
+                    
+                
+            </ul>
+
+        <span class="nav__sub-title">etc</span>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+            <ul>
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+      </li>
+  </ul>
+</nav>
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="[UE4] Jenkins를 이용한 CI환경 구축">
+    <meta itemprop="description" content="인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함1. Jenkins 설치Jenkins 다운로드 페이지설치에 딱히 어려움은 없음.추가적으로 Jenkins는 JRE 설치가 필요하다.Java 다운로드 페이지2. 환경설정초기화면Jenkins는 현재 사용중인 브라우저 언어에 따라서 설정이되는데, 한글같은 경우는 번역체가 좀 있어서 그냥 영어를 쓰는게 편한듯1) 노드추가Manage Jenkins -&gt; Manage Nodes and Clouds -&gt; New Node로 추가해준다.노드에 환경 변수를 추가해준다. ARCHIVE_ROOT는 빌드가 진행한 후 결과물을 압축해서 올릴 수 있는데 필요없다면 패스.ENGINE_ROOT에 쓸 엔진을 추가해준다.3. 프로젝트 추가NewItem -&gt; Freestyle project로 새로운 프로젝트를 생성한다.1) General1 This Project is parameterized (선택)파라미터를 통해 다양하게 빌드를 진행할 수 있다.위와같이 솔루션구성을 다르게 한다던가 플랫폼을 변경해서 빌드를 하는 등으로 사용할 수 있다.2 Restrict where this project can be run앞서 만들었던 노드의 이름을 넣어준다.3 User custom workspace프로젝트 폴더를 넣어준다.2) Source Code Management자신이 사용하고 있는 소스컨트롤을 선택하고 Repository를 설정3) Build Triggers빌드가 될 시점을 선택한다.현재 테스트해본것은 Poll SCM으로 H/2 * * * * 값을 넣어줘서 2분마다 Repository를 확인해서 변경 사항이 있으면 빌드를 진행하는 방식이다.4) Build빌드 명령을 설정해주는 부분.Add build step에서 Execute Windows batch command를 선택해서 추가해준다.1 temp, Binaries, Intermediate 폴더 삭제rd /s /q temprmdir /s /q &quot;%WORKSPACE%\Binaries&quot;rmdir /s /q &quot;%WORKSPACE%\Intermediate&quot;빌드한 파일들은 temp폴더에 저장했다가 빌드가 완료되면 폴더이름을 바꿔주어서 temp 폴더를 넣어준다.2 UnrealBuildTool을 이용해서 uproject파일에서 sln파일 생성&quot;%ENGINE_ROOT%\Engine\Binaries\DotNET\UnrealBuildTool.exe&quot; -projectfiles -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -game -rocket -progress3 Msbuild로 프로젝트 컴파일&quot;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe&quot; &quot;%WORKSPACE%\%PROJECT_NAME%.sln&quot; /t:build /p:Configuration=&quot;%BUILD_CONFIGURATION%&quot;;Platform=Win64;verbosity=diagnosticMSBuild 파일 경로는 사용하는 컴퓨터 환경에서 찾아서 넣어주면 된다.4 temp폴더 없으면 생성if not exist &quot;%WORKSPACE%/temp/x64&quot; mkdir &quot;%WORKSPACE%/temp/x64&quot;5 패키징 진행&quot;%ENGINE_ROOT%\Engine\Build\BatchFiles\RunUAT.bat&quot; BuildCookRun -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -noP4 -platform=Win64 -clientconfig=%BUILD_CONFIGURATION% -cook -allmaps -build -stage %USE_PAK% -archive -archivedirectory=&quot;%WORKSPACE%/temp/x64&quot;6 Temp폴더 이름 변경ren %WORKSPACE%\temp\x64\WindowsNoEditor %PROJECT_NAME%_%BUILD_CONFIGURATION%_x647 완료한 빌드폴더 압축하기(선택)&quot;%ARCHIVE_ROOT%/7z.exe&quot; a -t7z %WORKSPACE%/temp/x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64.7z &quot;%WORKSPACE%\temp\x64\%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64&quot;5) Post-build Actions빌드가 끝나고 나서 할것들을 정할 수 있다.슬랙에 알람, 이메일 전송, Jenkins에 압축한 파일 올리기 등등이 가능.TODO현재 테스트 환경은 로컬에서 진행한것이라 추후에 서버컴퓨터에서 작동을 시켜보기안드로이드로 빌드를하면 중간에 에러가 나서 이 부분을 어떻게 해야할지 생각해보기참고https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/https://patricevignola.com/post/automation-jenkins-unrealhttps://github.com/skymapgames/jenkins-ue4">
+    <meta itemprop="datePublished" content="May 16, 2021">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">[UE4] Jenkins를 이용한 CI환경 구축
+</h1>
+          
+            <p class="page__date"><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated: <time datetime="2021-05-16T00:00:00+00:00">May 16, 2021</time></p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              
+                <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+                <ul class="toc__menu"><li><a href="#1-jenkins-설치">1. Jenkins 설치</a></li><li><a href="#2-환경설정">2. 환경설정</a><ul><li><a href="#1-노드추가">1) 노드추가</a></li></ul></li><li><a href="#3-프로젝트-추가">3. 프로젝트 추가</a><ul><li><a href="#1-general">1) General</a><ul><li><a href="#1-this-project-is-parameterized-선택">1 This Project is parameterized (선택)</a></li><li><a href="#2-restrict-where-this-project-can-be-run">2 Restrict where this project can be run</a></li><li><a href="#3-user-custom-workspace">3 User custom workspace</a></li></ul></li><li><a href="#2-source-code-management">2) Source Code Management</a></li><li><a href="#3-build-triggers">3) Build Triggers</a></li><li><a href="#4-build">4) Build</a><ul><li><a href="#1-temp-binaries-intermediate-폴더-삭제">1 temp, Binaries, Intermediate 폴더 삭제</a></li><li><a href="#2-unrealbuildtool을-이용해서-uproject파일에서-sln파일-생성">2 UnrealBuildTool을 이용해서 uproject파일에서 sln파일 생성</a></li><li><a href="#3-msbuild로-프로젝트-컴파일">3 Msbuild로 프로젝트 컴파일</a></li><li><a href="#4-temp폴더-없으면-생성">4 temp폴더 없으면 생성</a></li><li><a href="#5-패키징-진행">5 패키징 진행</a></li><li><a href="#6-temp폴더-이름-변경">6 Temp폴더 이름 변경</a></li><li><a href="#7-완료한-빌드폴더-압축하기선택">7 완료한 빌드폴더 압축하기(선택)</a></li></ul></li><li><a href="#5-post-build-actions">5) Post-build Actions</a></li></ul></li><li><a href="#todo">TODO</a></li><li><a href="#참고">참고</a></li></ul>
+
+              
+            </nav>
+            <!-- devinlife comment : right-sidebar ads -->
+            <nav class="toc-custom">
+              
+            </nav>
+          </aside>
+        
+        <p>인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함</p>
+
+<h1 id="1-jenkins-설치">1. Jenkins 설치</h1>
+
+<p><a href="https://www.jenkins.io/download/">Jenkins 다운로드 페이지</a><br />
+설치에 딱히 어려움은 없음.<br />
+추가적으로 Jenkins는 JRE 설치가 필요하다.<br />
+<a href="https://java.com/ko/download/ie_manual.jsp?locale=ko">Java 다운로드 페이지</a></p>
+
+<h1 id="2-환경설정">2. 환경설정</h1>
+
+<p><img src="https://tonnac.github.io/assets/images/J0.png" alt="" /><br />
+초기화면<br />
+Jenkins는 현재 사용중인 브라우저 언어에 따라서 설정이되는데, 한글같은 경우는 번역체가 좀 있어서 그냥 영어를 쓰는게 편한듯</p>
+
+<h2 id="1-노드추가">1) 노드추가</h2>
+
+<p>Manage Jenkins -&gt; Manage Nodes and Clouds -&gt; New Node로 추가해준다.<br />
+노드에 환경 변수를 추가해준다. ARCHIVE_ROOT는 빌드가 진행한 후 결과물을 압축해서 올릴 수 있는데 필요없다면 패스.
+ENGINE_ROOT에 쓸 엔진을 추가해준다.<br />
+<img src="https://tonnac.github.io/assets/images/J1.png" alt="" /><br /></p>
+
+<h1 id="3-프로젝트-추가">3. 프로젝트 추가</h1>
+
+<p>NewItem -&gt; Freestyle project로 새로운 프로젝트를 생성한다.</p>
+
+<h2 id="1-general">1) General</h2>
+
+<p><img src="https://tonnac.github.io/assets/images/J2.png" alt="" /><br /></p>
+
+<h3 id="1-this-project-is-parameterized-선택">1 This Project is parameterized (선택)</h3>
+
+<p>파라미터를 통해 다양하게 빌드를 진행할 수 있다.<br />
+위와같이 솔루션구성을 다르게 한다던가 플랫폼을 변경해서 빌드를 하는 등으로 사용할 수 있다.</p>
+
+<h3 id="2-restrict-where-this-project-can-be-run">2 Restrict where this project can be run</h3>
+
+<p>앞서 만들었던 노드의 이름을 넣어준다.</p>
+
+<h3 id="3-user-custom-workspace">3 User custom workspace</h3>
+
+<p>프로젝트 폴더를 넣어준다.</p>
+
+<h2 id="2-source-code-management">2) Source Code Management</h2>
+
+<p>자신이 사용하고 있는 소스컨트롤을 선택하고 Repository를 설정</p>
+
+<h2 id="3-build-triggers">3) Build Triggers</h2>
+
+<p>빌드가 될 시점을 선택한다.<br />
+현재 테스트해본것은 Poll SCM으로 H/2 * * * * 값을 넣어줘서 2분마다 Repository를 확인해서 변경 사항이 있으면 빌드를 진행하는 방식이다.</p>
+
+<h2 id="4-build">4) Build</h2>
+
+<p>빌드 명령을 설정해주는 부분.</p>
+
+<p>Add build step에서 Execute Windows batch command를 선택해서 추가해준다.</p>
+
+<h3 id="1-temp-binaries-intermediate-폴더-삭제">1 temp, Binaries, Intermediate 폴더 삭제</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rd /s /q temp
+<span class="nb">rmdir</span> /s /q <span class="s2">"%WORKSPACE%</span><span class="se">\B</span><span class="s2">inaries"</span>
+<span class="nb">rmdir</span> /s /q <span class="s2">"%WORKSPACE%</span><span class="se">\I</span><span class="s2">ntermediate"</span>
+</code></pre></div></div>
+
+<p>빌드한 파일들은 temp폴더에 저장했다가 빌드가 완료되면 폴더이름을 바꿔주어서 temp 폴더를 넣어준다.</p>
+
+<h3 id="2-unrealbuildtool을-이용해서-uproject파일에서-sln파일-생성">2 UnrealBuildTool을 이용해서 uproject파일에서 sln파일 생성</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"%ENGINE_ROOT%</span><span class="se">\E</span><span class="s2">ngine</span><span class="se">\B</span><span class="s2">inaries</span><span class="se">\D</span><span class="s2">otNET</span><span class="se">\U</span><span class="s2">nrealBuildTool.exe"</span> <span class="nt">-projectfiles</span> <span class="nt">-project</span><span class="o">=</span><span class="s2">"%WORKSPACE%</span><span class="se">\%</span><span class="s2">PROJECT_NAME%.uproject"</span> <span class="nt">-game</span> <span class="nt">-rocket</span> <span class="nt">-progress</span>
+</code></pre></div></div>
+
+<h3 id="3-msbuild로-프로젝트-컴파일">3 Msbuild로 프로젝트 컴파일</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"C:</span><span class="se">\P</span><span class="s2">rogram Files (x86)</span><span class="se">\M</span><span class="s2">icrosoft Visual Studio</span><span class="se">\2</span><span class="s2">019</span><span class="se">\C</span><span class="s2">ommunity</span><span class="se">\M</span><span class="s2">SBuild</span><span class="se">\C</span><span class="s2">urrent</span><span class="se">\B</span><span class="s2">in</span><span class="se">\M</span><span class="s2">SBuild.exe"</span> <span class="s2">"%WORKSPACE%</span><span class="se">\%</span><span class="s2">PROJECT_NAME%.sln"</span> /t:build /p:Configuration<span class="o">=</span><span class="s2">"%BUILD_CONFIGURATION%"</span><span class="p">;</span><span class="nv">Platform</span><span class="o">=</span>Win64<span class="p">;</span><span class="nv">verbosity</span><span class="o">=</span>diagnostic
+</code></pre></div></div>
+
+<p>MSBuild 파일 경로는 사용하는 컴퓨터 환경에서 찾아서 넣어주면 된다.</p>
+
+<h3 id="4-temp폴더-없으면-생성">4 temp폴더 없으면 생성</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if </span>not exist <span class="s2">"%WORKSPACE%/temp/x64"</span> <span class="nb">mkdir</span> <span class="s2">"%WORKSPACE%/temp/x64"</span>
+</code></pre></div></div>
+
+<h3 id="5-패키징-진행">5 패키징 진행</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"%ENGINE_ROOT%</span><span class="se">\E</span><span class="s2">ngine</span><span class="se">\B</span><span class="s2">uild</span><span class="se">\B</span><span class="s2">atchFiles</span><span class="se">\R</span><span class="s2">unUAT.bat"</span> BuildCookRun <span class="nt">-project</span><span class="o">=</span><span class="s2">"%WORKSPACE%</span><span class="se">\%</span><span class="s2">PROJECT_NAME%.uproject"</span> <span class="nt">-noP4</span> <span class="nt">-platform</span><span class="o">=</span>Win64 <span class="nt">-clientconfig</span><span class="o">=</span>%BUILD_CONFIGURATION% <span class="nt">-cook</span> <span class="nt">-allmaps</span> <span class="nt">-build</span> <span class="nt">-stage</span> %USE_PAK% <span class="nt">-archive</span> <span class="nt">-archivedirectory</span><span class="o">=</span><span class="s2">"%WORKSPACE%/temp/x64"</span>
+</code></pre></div></div>
+
+<h3 id="6-temp폴더-이름-변경">6 Temp폴더 이름 변경</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ren %WORKSPACE%<span class="se">\t</span>emp<span class="se">\x</span>64<span class="se">\W</span>indowsNoEditor %PROJECT_NAME%_%BUILD_CONFIGURATION%_x64
+</code></pre></div></div>
+
+<h3 id="7-완료한-빌드폴더-압축하기선택">7 완료한 빌드폴더 압축하기(선택)</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"%ARCHIVE_ROOT%/7z.exe"</span> a <span class="nt">-t7z</span> %WORKSPACE%/temp/x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64.7z <span class="s2">"%WORKSPACE%</span><span class="se">\t</span><span class="s2">emp</span><span class="se">\x</span><span class="s2">64</span><span class="se">\%</span><span class="s2">PROJECT_NAME%_%BUILD_CONFIGURATION%_x64"</span>
+</code></pre></div></div>
+
+<h2 id="5-post-build-actions">5) Post-build Actions</h2>
+
+<p>빌드가 끝나고 나서 할것들을 정할 수 있다.<br />
+슬랙에 알람, 이메일 전송, Jenkins에 압축한 파일 올리기 등등이 가능.</p>
+
+<h1 id="todo">TODO</h1>
+
+<p>현재 테스트 환경은 로컬에서 진행한것이라 추후에 서버컴퓨터에서 작동을 시켜보기<br />
+안드로이드로 빌드를하면 중간에 에러가 나서 이 부분을 어떻게 해야할지 생각해보기</p>
+
+<h1 id="참고">참고</h1>
+
+<p><a href="https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/">https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/</a>
+<a href="https://patricevignola.com/post/automation-jenkins-unreal">https://patricevignola.com/post/automation-jenkins-unreal</a>
+<a href="https://github.com/skymapgames/jenkins-ue4">https://github.com/skymapgames/jenkins-ue4</a></p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#jenkins" class="page__taxonomy-item" rel="tag">Jenkins</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#ci" class="page__taxonomy-item" rel="tag">CI</a><span class="sep"> </span>
+    
+      
+      
+      <a href="/categories/#project" class="page__taxonomy-item" rel="tag">Project</a><span class="sep"> </span>
+    
+      
+      
+      <a href="/categories/#ue4" class="page__taxonomy-item" rel="tag">UE4</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-05-16T00:00:00+00:00">May 16, 2021</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%5BUE4%5D+Jenkins%EB%A5%BC+%EC%9D%B4%EC%9A%A9%ED%95%9C+CI%ED%99%98%EA%B2%BD+%EA%B5%AC%EC%B6%95%20https%3A%2F%2Ftonnac.github.io%2Fproject%2Fue4%2Fci%2FUE4_Jenkins%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Ftonnac.github.io%2Fproject%2Fue4%2Fci%2FUE4_Jenkins%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Ftonnac.github.io%2Fproject%2Fue4%2Fci%2FUE4_Jenkins%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/book/02/" class="pagination--pager" title="[Modern Effective C++] 2. auto의 타입 추론 규칙을 숙지
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You may also enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.03.01</p>
+      
+      
+        <a href="/book/02/" rel="permalink">[Modern Effective C++] 2. auto의 타입 추론 규칙을 숙지
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Book</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern Effective C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Type Deduction</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.03.01</p>
+      
+      
+        <a href="/book/01/" rel="permalink">[Modern Effective C++] 1. 템플릿 타입 추론 규칙을 숙지
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Book</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern Effective C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Modern C++</a><span class="sep"> </span>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Type Deduction</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.02.14</p>
+      
+      
+        <a href="/project/ue4/UE4.Wow/" rel="permalink">[UE4] UE4를 이용한 WoW모작
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Project</a><span class="sep"> </span><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">UE4</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Wow</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+      <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> 2021.02.13</p>
+      
+      
+        <a href="/project/directx11/DxMomo/" rel="permalink">[DirectX 11] Dx11를 이용한 모모도라 모작
+</a>
+      
+    </h2>
+      <!--Archive page 용-: (post -> page)-->
+<!--page__taxonomy.html에서 가져 옴--><span class="page__taxonomy">
+            <span itemprop="keywords">
+                <div class = "catecate"><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">Project</a><span class="sep"> </span><a href="/categories/#ue4" class="page__taxonomy-item-category" rel="tag">DirectX11</a></div>
+                <div>
+                
+                    <a href="/tags/" class="page__taxonomy-item-tag" rel="tag">Momodora</a>
+                
+                </div>
+            </span>
+        </span>
+  </article>
+</div>
+        
+      </div>
+    </div>
+  
+  
+</div>
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2021 tonnac. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+  </body>
+</html>
