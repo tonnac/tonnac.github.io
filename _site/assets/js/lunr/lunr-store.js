@@ -34,4 +34,10 @@ var store = [{
         "tags": ["Jenkins"],
         "url": "/project/ue4/ci/UE4_Jenkins/",
         "teaser": null
+      },{
+        "title": "[UE4] Jenkins 안드로이드 빌드",
+        "excerpt":"인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함 1. Jenkins 설치 Jenkins 다운로드 페이지 설치에 딱히 어려움은 없음. 추가적으로 Jenkins는 JRE 설치가 필요하다. Java 다운로드 페이지 2. 환경설정 초기화면 Jenkins는 현재 사용중인 브라우저 언어에 따라서 설정이되는데, 한글같은 경우는 번역체가 좀 있어서 그냥 영어를 쓰는게...","categories": ["Project","UE4","CI"],
+        "tags": ["Jenkins"],
+        "url": "/project/ue4/ci/drafts_UE4_Jenkins_Android/",
+        "teaser": null
       }]

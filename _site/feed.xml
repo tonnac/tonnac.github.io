@@ -1,4 +1,117 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://tonnac.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://tonnac.github.io/" rel="alternate" type="text/html" /><updated>2021-05-16T14:15:43+00:00</updated><id>https://tonnac.github.io/feed.xml</id><title type="html">블로그</title><author><name>tonnac</name></author><entry><title type="html">[UE4] Jenkins를 이용한 CI환경 구축</title><link href="https://tonnac.github.io/project/ue4/ci/UE4_Jenkins/" rel="alternate" type="text/html" title="[UE4] Jenkins를 이용한 CI환경 구축" /><published>2021-05-16T00:00:00+00:00</published><updated>2021-05-16T00:00:00+00:00</updated><id>https://tonnac.github.io/project/ue4/ci/UE4_Jenkins</id><content type="html" xml:base="https://tonnac.github.io/project/ue4/ci/UE4_Jenkins/">&lt;p&gt;인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://tonnac.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://tonnac.github.io/" rel="alternate" type="text/html" /><updated>2021-05-22T19:15:41+00:00</updated><id>https://tonnac.github.io/feed.xml</id><title type="html">블로그</title><author><name>tonnac</name></author><entry><title type="html">[UE4] Jenkins 안드로이드 빌드</title><link href="https://tonnac.github.io/project/ue4/ci/drafts_UE4_Jenkins_Android/" rel="alternate" type="text/html" title="[UE4] Jenkins 안드로이드 빌드" /><published>2021-05-19T12:28:24+00:00</published><updated>2021-05-19T12:28:24+00:00</updated><id>https://tonnac.github.io/project/ue4/ci/drafts_UE4_Jenkins_Android</id><content type="html" xml:base="https://tonnac.github.io/project/ue4/ci/drafts_UE4_Jenkins_Android/">&lt;p&gt;인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함&lt;/p&gt;
+
+&lt;h1 id=&quot;1-jenkins-설치&quot;&gt;1. Jenkins 설치&lt;/h1&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.jenkins.io/download/&quot;&gt;Jenkins 다운로드 페이지&lt;/a&gt;&lt;br /&gt;
+설치에 딱히 어려움은 없음.&lt;br /&gt;
+추가적으로 Jenkins는 JRE 설치가 필요하다.&lt;br /&gt;
+&lt;a href=&quot;https://java.com/ko/download/ie_manual.jsp?locale=ko&quot;&gt;Java 다운로드 페이지&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;2-환경설정&quot;&gt;2. 환경설정&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://tonnac.github.io/assets/images/J0.png&quot; alt=&quot;&quot; /&gt;&lt;br /&gt;
+초기화면&lt;br /&gt;
+Jenkins는 현재 사용중인 브라우저 언어에 따라서 설정이되는데, 한글같은 경우는 번역체가 좀 있어서 그냥 영어를 쓰는게 편한듯&lt;/p&gt;
+
+&lt;h2 id=&quot;1-노드추가&quot;&gt;1) 노드추가&lt;/h2&gt;
+
+&lt;p&gt;Manage Jenkins -&amp;gt; Manage Nodes and Clouds -&amp;gt; New Node로 추가해준다.&lt;br /&gt;
+노드에 환경 변수를 추가해준다. ARCHIVE_ROOT는 빌드가 진행한 후 결과물을 압축해서 올릴 수 있는데 필요없다면 패스.
+ENGINE_ROOT에 쓸 엔진을 추가해준다.&lt;br /&gt;
+&lt;img src=&quot;https://tonnac.github.io/assets/images/J1.png&quot; alt=&quot;&quot; /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;3-프로젝트-추가&quot;&gt;3. 프로젝트 추가&lt;/h1&gt;
+
+&lt;p&gt;NewItem -&amp;gt; Freestyle project로 새로운 프로젝트를 생성한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;1-general&quot;&gt;1) General&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://tonnac.github.io/assets/images/J2.png&quot; alt=&quot;&quot; /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;1-this-project-is-parameterized-선택&quot;&gt;1 This Project is parameterized (선택)&lt;/h3&gt;
+
+&lt;p&gt;파라미터를 통해 다양하게 빌드를 진행할 수 있다.&lt;br /&gt;
+위와같이 솔루션구성을 다르게 한다던가 플랫폼을 변경해서 빌드를 하는 등으로 사용할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2-restrict-where-this-project-can-be-run&quot;&gt;2 Restrict where this project can be run&lt;/h3&gt;
+
+&lt;p&gt;앞서 만들었던 노드의 이름을 넣어준다.&lt;/p&gt;
+
+&lt;h3 id=&quot;3-user-custom-workspace&quot;&gt;3 User custom workspace&lt;/h3&gt;
+
+&lt;p&gt;프로젝트 폴더를 넣어준다.&lt;/p&gt;
+
+&lt;h2 id=&quot;2-source-code-management&quot;&gt;2) Source Code Management&lt;/h2&gt;
+
+&lt;p&gt;자신이 사용하고 있는 소스컨트롤을 선택하고 Repository를 설정&lt;/p&gt;
+
+&lt;h2 id=&quot;3-build-triggers&quot;&gt;3) Build Triggers&lt;/h2&gt;
+
+&lt;p&gt;빌드가 될 시점을 선택한다.&lt;br /&gt;
+현재 테스트해본것은 Poll SCM으로 H/2 * * * * 값을 넣어줘서 2분마다 Repository를 확인해서 변경 사항이 있으면 빌드를 진행하는 방식이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;4-build&quot;&gt;4) Build&lt;/h2&gt;
+
+&lt;p&gt;빌드 명령을 설정해주는 부분.&lt;/p&gt;
+
+&lt;p&gt;Add build step에서 Execute Windows batch command를 선택해서 추가해준다.&lt;/p&gt;
+
+&lt;h3 id=&quot;1-temp-binaries-intermediate-폴더-삭제&quot;&gt;1 temp, Binaries, Intermediate 폴더 삭제&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rd /s /q temp
+&lt;span class=&quot;nb&quot;&gt;rmdir&lt;/span&gt; /s /q &lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\B&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;inaries&quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;rmdir&lt;/span&gt; /s /q &lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\I&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ntermediate&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;빌드한 파일들은 temp폴더에 저장했다가 빌드가 완료되면 폴더이름을 바꿔주어서 temp 폴더를 넣어준다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2-unrealbuildtool을-이용해서-uproject파일에서-sln파일-생성&quot;&gt;2 UnrealBuildTool을 이용해서 uproject파일에서 sln파일 생성&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s2&quot;&gt;&quot;%ENGINE_ROOT%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\E&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ngine&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\B&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;inaries&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\D&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;otNET&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\U&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;nrealBuildTool.exe&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-projectfiles&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\%&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;PROJECT_NAME%.uproject&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-game&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-rocket&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-progress&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;3-msbuild로-프로젝트-컴파일&quot;&gt;3 Msbuild로 프로젝트 컴파일&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s2&quot;&gt;&quot;C:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\P&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;rogram Files (x86)&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\M&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;icrosoft Visual Studio&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\2&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;019&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\C&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ommunity&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\M&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;SBuild&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\C&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;urrent&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\B&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\M&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;SBuild.exe&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\%&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;PROJECT_NAME%.sln&quot;&lt;/span&gt; /t:build /p:Configuration&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;%BUILD_CONFIGURATION%&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Platform&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;Win64&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;verbosity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;diagnostic
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;MSBuild 파일 경로는 사용하는 컴퓨터 환경에서 찾아서 넣어주면 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;4-temp폴더-없으면-생성&quot;&gt;4 temp폴더 없으면 생성&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;if &lt;/span&gt;not exist &lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%/temp/x64&quot;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;mkdir&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%/temp/x64&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;5-패키징-진행&quot;&gt;5 패키징 진행&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s2&quot;&gt;&quot;%ENGINE_ROOT%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\E&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ngine&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\B&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;uild&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\B&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;atchFiles&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\R&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;unUAT.bat&quot;&lt;/span&gt; BuildCookRun &lt;span class=&quot;nt&quot;&gt;-project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\%&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;PROJECT_NAME%.uproject&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-noP4&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-platform&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;Win64 &lt;span class=&quot;nt&quot;&gt;-clientconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;%BUILD_CONFIGURATION% &lt;span class=&quot;nt&quot;&gt;-cook&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-allmaps&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-build&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-stage&lt;/span&gt; %USE_PAK% &lt;span class=&quot;nt&quot;&gt;-archive&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-archivedirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%/temp/x64&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;6-temp폴더-이름-변경&quot;&gt;6 Temp폴더 이름 변경&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ren %WORKSPACE%&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;emp&lt;span class=&quot;se&quot;&gt;\x&lt;/span&gt;64&lt;span class=&quot;se&quot;&gt;\W&lt;/span&gt;indowsNoEditor %PROJECT_NAME%_%BUILD_CONFIGURATION%_x64
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;7-완료한-빌드폴더-압축하기선택&quot;&gt;7 완료한 빌드폴더 압축하기(선택)&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s2&quot;&gt;&quot;%ARCHIVE_ROOT%/7z.exe&quot;&lt;/span&gt; a &lt;span class=&quot;nt&quot;&gt;-t7z&lt;/span&gt; %WORKSPACE%/temp/x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64.7z &lt;span class=&quot;s2&quot;&gt;&quot;%WORKSPACE%&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;emp&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\%&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;PROJECT_NAME%_%BUILD_CONFIGURATION%_x64&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;5-post-build-actions&quot;&gt;5) Post-build Actions&lt;/h2&gt;
+
+&lt;p&gt;빌드가 끝나고 나서 할것들을 정할 수 있다.&lt;br /&gt;
+슬랙에 알람, 이메일 전송, Jenkins에 압축한 파일 올리기 등등이 가능.&lt;/p&gt;
+
+&lt;h1 id=&quot;todo&quot;&gt;TODO&lt;/h1&gt;
+
+&lt;p&gt;현재 테스트 환경은 로컬에서 진행한것이라 추후에 서버컴퓨터에서 작동을 시켜보기&lt;br /&gt;
+안드로이드로 빌드를하면 중간에 에러가 나서 이 부분을 어떻게 해야할지 생각해보기&lt;/p&gt;
+
+&lt;h1 id=&quot;참고&quot;&gt;참고&lt;/h1&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/&quot;&gt;https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/&lt;/a&gt;
+&lt;a href=&quot;https://patricevignola.com/post/automation-jenkins-unreal&quot;&gt;https://patricevignola.com/post/automation-jenkins-unreal&lt;/a&gt;
+&lt;a href=&quot;https://github.com/skymapgames/jenkins-ue4&quot;&gt;https://github.com/skymapgames/jenkins-ue4&lt;/a&gt;&lt;/p&gt;</content><author><name>tonnac</name></author><category term="Project" /><category term="UE4" /><category term="CI" /><category term="Jenkins" /><summary type="html">인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함 1. Jenkins 설치 Jenkins 다운로드 페이지 설치에 딱히 어려움은 없음. 추가적으로 Jenkins는 JRE 설치가 필요하다. Java 다운로드 페이지 2. 환경설정 초기화면 Jenkins는 현재 사용중인 브라우저 언어에 따라서 설정이되는데, 한글같은 경우는 번역체가 좀 있어서 그냥 영어를 쓰는게 편한듯 1) 노드추가 Manage Jenkins -&amp;gt; Manage Nodes and Clouds -&amp;gt; New Node로 추가해준다. 노드에 환경 변수를 추가해준다. ARCHIVE_ROOT는 빌드가 진행한 후 결과물을 압축해서 올릴 수 있는데 필요없다면 패스. ENGINE_ROOT에 쓸 엔진을 추가해준다. 3. 프로젝트 추가 NewItem -&amp;gt; Freestyle project로 새로운 프로젝트를 생성한다. 1) General 1 This Project is parameterized (선택) 파라미터를 통해 다양하게 빌드를 진행할 수 있다. 위와같이 솔루션구성을 다르게 한다던가 플랫폼을 변경해서 빌드를 하는 등으로 사용할 수 있다. 2 Restrict where this project can be run 앞서 만들었던 노드의 이름을 넣어준다. 3 User custom workspace 프로젝트 폴더를 넣어준다. 2) Source Code Management 자신이 사용하고 있는 소스컨트롤을 선택하고 Repository를 설정 3) Build Triggers 빌드가 될 시점을 선택한다. 현재 테스트해본것은 Poll SCM으로 H/2 * * * * 값을 넣어줘서 2분마다 Repository를 확인해서 변경 사항이 있으면 빌드를 진행하는 방식이다. 4) Build 빌드 명령을 설정해주는 부분. Add build step에서 Execute Windows batch command를 선택해서 추가해준다. 1 temp, Binaries, Intermediate 폴더 삭제 rd /s /q temp rmdir /s /q &quot;%WORKSPACE%\Binaries&quot; rmdir /s /q &quot;%WORKSPACE%\Intermediate&quot; 빌드한 파일들은 temp폴더에 저장했다가 빌드가 완료되면 폴더이름을 바꿔주어서 temp 폴더를 넣어준다. 2 UnrealBuildTool을 이용해서 uproject파일에서 sln파일 생성 &quot;%ENGINE_ROOT%\Engine\Binaries\DotNET\UnrealBuildTool.exe&quot; -projectfiles -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -game -rocket -progress 3 Msbuild로 프로젝트 컴파일 &quot;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe&quot; &quot;%WORKSPACE%\%PROJECT_NAME%.sln&quot; /t:build /p:Configuration=&quot;%BUILD_CONFIGURATION%&quot;;Platform=Win64;verbosity=diagnostic MSBuild 파일 경로는 사용하는 컴퓨터 환경에서 찾아서 넣어주면 된다. 4 temp폴더 없으면 생성 if not exist &quot;%WORKSPACE%/temp/x64&quot; mkdir &quot;%WORKSPACE%/temp/x64&quot; 5 패키징 진행 &quot;%ENGINE_ROOT%\Engine\Build\BatchFiles\RunUAT.bat&quot; BuildCookRun -project=&quot;%WORKSPACE%\%PROJECT_NAME%.uproject&quot; -noP4 -platform=Win64 -clientconfig=%BUILD_CONFIGURATION% -cook -allmaps -build -stage %USE_PAK% -archive -archivedirectory=&quot;%WORKSPACE%/temp/x64&quot; 6 Temp폴더 이름 변경 ren %WORKSPACE%\temp\x64\WindowsNoEditor %PROJECT_NAME%_%BUILD_CONFIGURATION%_x64 7 완료한 빌드폴더 압축하기(선택) &quot;%ARCHIVE_ROOT%/7z.exe&quot; a -t7z %WORKSPACE%/temp/x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64/%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64.7z &quot;%WORKSPACE%\temp\x64\%PROJECT_NAME%_%BUILD_CONFIGURATION%_x64&quot; 5) Post-build Actions 빌드가 끝나고 나서 할것들을 정할 수 있다. 슬랙에 알람, 이메일 전송, Jenkins에 압축한 파일 올리기 등등이 가능. TODO 현재 테스트 환경은 로컬에서 진행한것이라 추후에 서버컴퓨터에서 작동을 시켜보기 안드로이드로 빌드를하면 중간에 에러가 나서 이 부분을 어떻게 해야할지 생각해보기 참고 https://www.cairansteverink.nl/cairansteverink/blog/unreal-engine-4-build-automation-with-jenkins-and-perforce/ https://patricevignola.com/post/automation-jenkins-unreal https://github.com/skymapgames/jenkins-ue4</summary></entry><entry><title type="html">[UE4] Jenkins를 이용한 CI환경 구축</title><link href="https://tonnac.github.io/project/ue4/ci/UE4_Jenkins/" rel="alternate" type="text/html" title="[UE4] Jenkins를 이용한 CI환경 구축" /><published>2021-05-16T00:00:00+00:00</published><updated>2021-05-16T00:00:00+00:00</updated><id>https://tonnac.github.io/project/ue4/ci/UE4_Jenkins</id><content type="html" xml:base="https://tonnac.github.io/project/ue4/ci/UE4_Jenkins/">&lt;p&gt;인터넷 돌아다니다가 빌드 자동화에 대해 알게되고 Jenkins를 통해 언리얼엔진 프로젝트에 적용해 본 내용을 정리함&lt;/p&gt;
 
 &lt;h1 id=&quot;1-jenkins-설치&quot;&gt;1. Jenkins 설치&lt;/h1&gt;
 
